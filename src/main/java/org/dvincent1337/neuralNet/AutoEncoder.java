@@ -5,7 +5,7 @@ import java.util.Vector;
 import org.jblas.DoubleMatrix;
 
 /**
- * Initial Auto-Encoder implementation ( without Sparsity constraints for now) and a single hidden layer
+ * Initial Auto-Encoder implementation and a single hidden layer
  * of configurable number of neurons
  * 
  * 
@@ -32,8 +32,26 @@ public class AutoEncoder extends NeuralNetwork {
 		super(new int[] {inputNeurons,hiddenNeurons,inputNeurons}, true);
 	}
 
-
+	public static Vector<DoubleMatrix> trainWithBackprop(DoubleMatrix X, DoubleMatrix Y,
+			Vector<DoubleMatrix> Theta,int[] topology, double lambda,double sparsityParameter,double beta,int max_iter, boolean verbose)
+	{
+		CostFunction bpCost = new AutoEncoderBackPropCostWithSparsity(X,Y,topology,lambda,sparsityParameter,beta);
+		DoubleMatrix trained_theta = fmincg(bpCost,reshapeToVector(Theta),max_iter,verbose);
+		Vector<DoubleMatrix> result = reshapeToList(trained_theta,topology);
+		
+		return result;
+	}
 	
+	/**
+	 * Given an input and output matrix trains the neural network using backprop
+	 */
+	public void trainBP(DoubleMatrix inputs, DoubleMatrix outputs,
+			double lambda,double sparsityParameter,double beta, int max_iter,boolean verbose)
+	{
+		this.setTheta(AutoEncoder.trainWithBackprop(inputs,outputs,
+				this.getTheta(),this.getTopology(),lambda,sparsityParameter,beta,max_iter,verbose));
+		
+	}
 	
 	/**
 	 * Returns the first-level activation hypothesis of a neural network given weight matricies (Theta) and inputs (X)
